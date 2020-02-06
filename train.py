@@ -59,6 +59,7 @@ class GCN_Net(torch.nn.Module):
 # Load data
 
 data_set = 'cora'
+#data_set = 'citeseer'
 adj, features, labels, idx_train, idx_val, idx_test = load_data(data_set)
 
 # Model and optimizer
