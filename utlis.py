@@ -13,7 +13,7 @@ import torch
 
 def encode_onehot(labels):
     classes = set(labels)
-    classes_dict = {c: np.identity(len(classes))[i, 0] for i, c in enumerate(classes)}
+    classes_dict = {c: np.identity(len(classes))[i, :] for i, c in enumerate(classes)}
     labels_onehot = np.array(list(map(classes_dict.get, labels)),
                              dtype=np.int32)
     return labels_onehot
@@ -44,7 +44,7 @@ def load_data(dataset):
     path = './data/' + dataset + '/'
     print('Loading {} dataset ...'.format(dataset))
 
-    idx_features_labels = np.getfromtxt("{}{}.content".format(path, dataset),
+    idx_features_labels = np.genfromtxt("{}{}.content".format(path, dataset),
                                         dtype=np.dtype(str))
     features = sp.csr_matrix(idx_features_labels[:, 1:-1], dtype=np.float32)
     labels = encode_onehot(idx_features_labels[:, -1])
@@ -57,22 +57,22 @@ def load_data(dataset):
     edges = np.array(list(map(idx_map.get, edges_unordered.flatten())),
                      dtype=np.int32).reshape(edges_unordered.shape)
     adj = sp.coo_matrix((np.ones(edges.shape[0]), (edges[:, 0], edges[:, 1])),
-                        shape=(labels.shape[0], labels.shape[1]),
+                        shape=(labels.shape[0], labels.shape[0]),
                         dtype=np.float32)
 
     # build symmetric adjacency matrix
-    adj = adj + adj.T.multply(adj.T > adj) - adj.multiply(adj.T > adj)
+    adj = adj + adj.T.multiply(adj.T > adj) - adj.multiply(adj.T > adj)
 
     features = normalize(features)
     adj = normalize(adj + sp.eye(adj.shape[0]))
 
     total = features.shape[0]
-    idx_train = range(0.6 * total)
-    idx_val = range(0.6 * total, 0.8 * total)
-    idx_test = rage(.8 * total, total)
+    idx_train = range(int(0.6 * total))
+    idx_val = range(int(0.6 * total), int(0.8 * total))
+    idx_test = range(int(.8 * total), total)
 
     features = torch.FloatTensor(np.array(features.todense()))
-    labels = torch.LongTensor(np.where(labels[1]))
+    labels = torch.LongTensor(np.where(labels)[1])
     adj = sparse_mx_to_torch_sparse_tensor(adj)
 
     idx_train = torch.LongTensor(idx_train)
